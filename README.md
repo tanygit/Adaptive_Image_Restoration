@@ -15,11 +15,7 @@ salt-and-pepper noise, and blur (including combinations).
 4.  The API returns the restored image, detected degradations,
     applied/skipped operations, and diagnostic statistics.
 
-> **Important:** Trained model artifacts are not included in this
-> repository. Train/export them using
-> `colab_train_degradation_cnn.ipynb` and copy all four generated files
-> into `backend/artifacts/`. Until then, `/health` reports that the
-> model is unavailable and `/restore` cannot process images.
+> **Important:** Trained model artifacts and training file are not included in this.
 
 ## Project structure
 
@@ -54,8 +50,7 @@ Python 3.11 is recommended (64-bit Python 3.10--3.12 is supported).
 
 ## Add trained artifacts
 
-After running the Colab notebook, download `deployment_artifacts.zip`,
-extract it, and copy these four files into `backend/artifacts/`:
+After Training copy these four files into `backend/artifacts/`:
 
 -   `degradation_cnn.pth`
 -   `class_thresholds.json`
