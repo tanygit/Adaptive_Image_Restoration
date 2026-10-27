@@ -1,0 +1,10 @@
+# Runtime dependencies. Supported Python: 3.10, 3.11 or 3.12 (64-bit). Tested on Python 3.12.3 (Linux) with:
+# torch 2.14.1, numpy 2.4.4, opencv-python-headless 4.11, Pillow 12.1, fastapi 0.148, uvicorn 0.54, python-multipart 0.0.32
+# On Windows, `pip install torch` from PyPI installs the CPU build (no NVIDIA GPU needed).
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+numpy>=1.26
+opencv-python-headless>=4.9,<5
+Pillow>=10.3
+torch>=2.2
