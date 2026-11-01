@@ -41,12 +41,12 @@ Open **Command Prompt** in the project root:
 ``` bat
 cd backend
 py -3.11 -m venv .venv
-.venv\Scripts\activate.bat
+.venv\Scripts\activate
 python -m pip install --upgrade pip
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 ```
 
-Python 3.11 is recommended (64-bit Python 3.10--3.12 is supported).
+Python 3.11 is recommended (64-bit Python 3.10--3.12 is supported). 
 
 ## Add trained artifacts
 

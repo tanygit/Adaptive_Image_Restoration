@@ -18,3 +18,15 @@ backend/test_pairs/*
 
 build_notebook.py
 colab_train_degradation_cnn.ipynb
+
+
+# Antigravity local agent skills
+.agent/
+.agents/
+
+
+# Frontend dependencies and builds
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
