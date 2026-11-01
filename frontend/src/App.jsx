@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import DropZone from './components/DropZone';
 import ComparisonSlider from './components/ComparisonSlider';
 import ControlDeck from './components/ControlDeck';
 import DiagnosticsDrawer from './components/DiagnosticsDrawer';
-import { Loader2, AlertTriangle, X } from 'lucide-react';
+import BackgroundArtwork from './components/BackgroundArtwork';
+import { Loader2, AlertTriangle, X, RefreshCw, Info } from 'lucide-react';
 
 const API_BASE = 'http://127.0.0.1:8000';
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MiB matches backend config
 
 export default function App() {
   const [backendStatus, setBackendStatus] = useState('checking'); // 'checking' | 'online' | 'offline'
@@ -21,14 +23,8 @@ export default function App() {
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [error, setError] = useState(null);
 
-  // Health check on mount
-  useEffect(() => {
-    checkHealth();
-    const interval = setInterval(checkHealth, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const checkHealth = async () => {
+  // Health check on mount & periodic polling
+  const checkHealth = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE}/health`);
       if (res.ok) {
@@ -40,13 +36,58 @@ export default function App() {
     } catch {
       setBackendStatus('offline');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    checkHealth();
+    const interval = setInterval(checkHealth, 15000);
+    return () => clearInterval(interval);
+  }, [checkHealth]);
+
+  // Clean up object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (originalUrl) URL.revokeObjectURL(originalUrl);
+    };
+  }, [originalUrl]);
+
+  // Global clipboard paste listener (Ctrl+V)
+  useEffect(() => {
+    const handlePaste = (e) => {
+      if (isProcessing) return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          const pastedFile = items[i].getAsFile();
+          if (pastedFile) {
+            handleFileSelect(pastedFile);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [isProcessing]);
 
   const handleFileSelect = async (selectedFile) => {
-    setFile(selectedFile);
     setError(null);
 
-    // Create object URL for local display of original image
+    // Client-side file size guard
+    if (selectedFile.size > MAX_UPLOAD_BYTES) {
+      setError(`File exceeds the 25 MiB limit (${(selectedFile.size / (1024 * 1024)).toFixed(1)} MiB). Please choose a smaller image.`);
+      return;
+    }
+
+    // Revoke previous object URL if any
+    if (originalUrl) {
+      URL.revokeObjectURL(originalUrl);
+    }
+
+    setFile(selectedFile);
     const localUrl = URL.createObjectURL(selectedFile);
     setOriginalUrl(localUrl);
 
@@ -84,7 +125,7 @@ export default function App() {
         setRestoredUrl(`${API_BASE}${data.restored_image_url}`);
       }
     } catch (err) {
-      setError(err.message || 'Failed to restore image. Please ensure the backend is running.');
+      setError(err.message || 'Failed to restore image. Please ensure the backend is running at http://127.0.0.1:8000');
     } finally {
       setIsProcessing(false);
     }
@@ -119,27 +160,47 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-studio-bg text-slate-100">
+    <div className="min-h-screen flex flex-col bg-paper-base text-ink-dark relative selection:bg-pop-magenta selection:text-white">
+      {/* Pop Art Generative Background Artwork */}
+      <BackgroundArtwork />
+
       <Header
         backendStatus={backendStatus}
         hasImage={!!file}
         onReset={handleReset}
       />
 
-      <main className="flex-1 flex flex-col justify-center p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-        {/* Error Alert */}
+      <main className="flex-1 flex flex-col justify-center p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full relative z-10">
+        {/* Error Alert with Retry & Recovery */}
         {error && (
-          <div className="w-full max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start justify-between">
-            <div className="flex items-start space-x-2.5">
-              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="w-full max-w-3xl mx-auto mb-6 p-4 rounded-2xl bg-paper-card border-2 border-pop-magenta text-ink-dark text-xs flex items-start justify-between shadow-pop-sm"
+          >
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 rounded-md bg-pop-magenta text-white flex items-center justify-center shrink-0 mt-0.5">
+                <AlertTriangle className="w-4 h-4" aria-hidden="true" />
+              </div>
               <div>
-                <p className="font-semibold text-rose-200">Processing Error</p>
-                <p>{error}</p>
+                <p className="font-bold text-pop-magenta uppercase tracking-wide">Processing Interrupted</p>
+                <p className="text-ink-body font-medium mt-0.5">{error}</p>
+                {file && !restoredUrl && (
+                  <button
+                    type="button"
+                    onClick={() => processRestoration(file, selectedStrength)}
+                    className="mt-2.5 inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-pop-cyan text-white font-bold text-[11px] border border-ink-dark shadow-sm hover:bg-blue-600 active:translate-x-0.5 active:translate-y-0.5"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>Retry Restoration</span>
+                  </button>
+                )}
               </div>
             </div>
             <button
               onClick={() => setError(null)}
-              className="p-1 hover:bg-rose-500/20 rounded-lg text-rose-400"
+              aria-label="Dismiss error message"
+              className="p-1 hover:bg-paper-warm rounded-lg text-ink-muted hover:text-ink-dark"
             >
               <X className="w-4 h-4" />
             </button>
@@ -147,7 +208,7 @@ export default function App() {
         )}
 
         {/* Empty State: DropZone */}
-        {!file && (
+        {(!file || (!restoredUrl && error)) && (
           <DropZone
             onFileSelect={handleFileSelect}
             disabled={backendStatus === 'offline'}
@@ -156,14 +217,19 @@ export default function App() {
 
         {/* Processing Loader Overlay */}
         {isProcessing && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-studio-panel border border-studio-border flex items-center justify-center text-blue-400 shadow-2xl">
-              <Loader2 className="w-8 h-8 animate-spin" />
+          <div
+            role="status"
+            aria-live="polite"
+            className="fixed inset-0 z-50 bg-paper-base/75 backdrop-blur-md flex flex-col items-center justify-center space-y-4"
+          >
+            <div className="relative w-20 h-20 rounded-2xl bg-pop-yellow border-2 border-ink-dark flex items-center justify-center text-ink-dark shadow-pop">
+              <Loader2 className="w-9 h-9 animate-spin" aria-hidden="true" />
+              <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-pop-cyan border border-ink-dark" />
             </div>
-            <div className="text-center">
-              <h3 className="text-base font-semibold text-white">Analyzing & Restoring Image</h3>
-              <p className="text-xs text-studio-muted mt-1">
-                Evaluating CNN degradation features and applying matching OpenCV filters...
+            <div className="text-center px-4">
+              <h3 className="text-lg font-black text-ink-dark uppercase tracking-wide">Restoring Image Clarity</h3>
+              <p className="text-xs text-ink-muted mt-1 max-w-sm">
+                Executing CNN diagnosis & running adaptive OpenCV pipelines...
               </p>
             </div>
           </div>
@@ -177,6 +243,14 @@ export default function App() {
               restoredUrl={restoredUrl}
               filename={file.name}
             />
+
+            {/* Advisory Warnings from Backend Pipeline */}
+            {restoreData?.warnings && restoreData.warnings.length > 0 && (
+              <div className="w-full max-w-5xl mt-3 p-3 rounded-2xl bg-paper-card border border-amber-300 text-xs flex items-center space-x-2.5 shadow-sm text-ink-body">
+                <Info className="w-4 h-4 text-amber-700 shrink-0" aria-hidden="true" />
+                <span className="font-medium">{restoreData.warnings.join(' • ')}</span>
+              </div>
+            )}
 
             <ControlDeck
               detectedDegradations={restoreData?.detected_degradations || []}
@@ -195,10 +269,9 @@ export default function App() {
         )}
       </main>
 
-      <footer className="border-t border-studio-border/60 py-3 px-6 text-center text-xs text-studio-muted">
-        Adaptive Image Restoration &bull; Explainable Classical CV Guided by Deep Learning
+      <footer className="relative z-10 border-t border-ink-dark/10 py-3.5 px-6 text-center text-xs font-medium text-ink-muted bg-paper-base/80 backdrop-blur">
+        Adaptive Image Restoration &bull; Pop Art Craft Direction &bull; Explainable CV + Neural Classifier
       </footer>
     </div>
   );
 }
-

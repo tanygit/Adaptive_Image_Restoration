@@ -3,26 +3,63 @@
 @tailwind utilities;
 
 @layer base {
-  /* Custom scrollbar */
+  body {
+    background-color: #fbf8f3;
+    color: #141416;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Risograph & Newsprint selection */
+  ::selection {
+    background-color: #ff2d78;
+    color: #ffffff;
+  }
+
+  /* Tactile custom scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #0a0d12;
+    background: #f4ede2;
   }
   ::-webkit-scrollbar-thumb {
-    background: #253043;
+    background: #c8b9a2;
     border-radius: 4px;
+    border: 1px solid #fbf8f3;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #3b82f6;
+    background: #0062ff;
   }
 
-  /* Accessible focus ring */
   *:focus-visible {
-    outline: 2px solid #3b82f6;
+    outline: 2px solid #0062ff;
     outline-offset: 2px;
   }
 }
 
+/* Halftone dot pattern (retro pop-art screen) */
+.bg-halftone {
+  background-image: radial-gradient(#141416 1.25px, transparent 1.25px);
+  background-size: 12px 12px;
+}
+
+.bg-halftone-cyan {
+  background-image: radial-gradient(#0062ff 1.25px, transparent 1.25px);
+  background-size: 10px 10px;
+}
+
+.bg-halftone-magenta {
+  background-image: radial-gradient(#ff2d78 1.25px, transparent 1.25px);
+  background-size: 10px 10px;
+}
+
+.bg-halftone-yellow {
+  background-image: radial-gradient(#ffb703 1.5px, transparent 1.5px);
+  background-size: 10px 10px;
+}
+
+/* Tactile film grain overlay */
+.bg-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+}

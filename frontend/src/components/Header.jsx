@@ -1,41 +1,49 @@
 import React from 'react';
-import { Sliders, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Sliders, RefreshCw } from 'lucide-react';
 
 export default function Header({ backendStatus, onReset, hasImage }) {
   return (
-    <header className="border-b border-studio-border bg-studio-surface/80 backdrop-blur sticky top-0 z-30 px-6 py-4">
+    <header className="relative z-20 border-b border-ink-dark/10 bg-paper-base/90 backdrop-blur-md px-6 py-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+        {/* Brand */}
+        <div className="flex items-center space-x-3.5">
+          <div className="relative w-11 h-11 rounded-2xl bg-pop-cyan text-white flex items-center justify-center shadow-pop-sm border-2 border-ink-dark">
             <Sliders className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-pop-yellow border-2 border-ink-dark" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-white">
-              Adaptive Image Restoration
-            </h1>
-            <p className="text-xs text-studio-muted">
-              Deep CNN flaw detection paired with deterministic OpenCV restoration
+            <div className="flex items-center space-x-2.5">
+              <h1 className="text-base sm:text-lg font-black tracking-tight text-ink-dark uppercase">
+                ADAPTIVE RESTORE
+              </h1>
+              <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-pop-yellow text-ink-dark border border-ink-dark shadow-pop-sm">
+                PRO LAB
+              </span>
+            </div>
+            <p className="text-xs text-ink-body font-medium hidden sm:block">
+              Explainable OpenCV filters guided by deep CNN flaw diagnosis
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
+        {/* Status & Actions */}
+        <div className="flex items-center space-x-3 sm:space-x-4">
           {/* Backend Connection Status */}
-          <div className="flex items-center space-x-2 text-xs px-3 py-1.5 rounded-full bg-studio-panel border border-studio-border">
+          <div className="flex items-center space-x-2 text-xs px-3.5 py-1.5 rounded-full bg-paper-card border-2 border-ink-dark shadow-pop-sm">
             {backendStatus === 'online' ? (
               <>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-emerald-400 font-medium">Model Ready</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-pop-green animate-pulse" />
+                <span className="text-ink-dark font-black tracking-wide text-[11px]">ONLINE</span>
               </>
             ) : backendStatus === 'checking' ? (
               <>
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                <span className="text-amber-400">Connecting...</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-pop-amber animate-ping" />
+                <span className="text-ink-muted font-bold text-[11px]">CONNECTING...</span>
               </>
             ) : (
               <>
-                <span className="w-2 h-2 rounded-full bg-rose-500" />
-                <span className="text-rose-400 font-medium">Backend Offline</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-pop-magenta" />
+                <span className="text-pop-magenta font-black text-[11px]">OFFLINE</span>
               </>
             )}
           </div>
@@ -44,7 +52,8 @@ export default function Header({ backendStatus, onReset, hasImage }) {
           {hasImage && (
             <button
               onClick={onReset}
-              className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-studio-panel hover:bg-studio-border text-slate-200 transition-colors border border-studio-border"
+              aria-label="Upload a new photo"
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-pop-yellow hover:bg-yellow-400 text-ink-dark border-2 border-ink-dark shadow-pop-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>New Photo</span>
@@ -55,4 +64,3 @@ export default function Header({ backendStatus, onReset, hasImage }) {
     </header>
   );
 }
-
